@@ -8,11 +8,38 @@
 import UIKit
 
 class PostTableViewCell: UITableViewCell {
+    
+    var likedDelegate: TapLikedDelegate?
 
+    struct ViewModel {
+        let author: String
+        let image: String
+        let description: String
+        var likes: Int
+        var views: Int
+    }
+    
     private let contentProfileView : UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
+    }()
+    
+    private lazy var stackViewPost: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 10
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        return stackView
+    }()
+
+    private lazy var stackViewLikesViews: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 120
+        stackView.distribution = .fillEqually
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        return stackView
     }()
     
     private let contentAuthorLabel : UILabel = {
@@ -28,6 +55,7 @@ class PostTableViewCell: UITableViewCell {
         let image = UIImageView()
         image.translatesAutoresizingMaskIntoConstraints = false
         image.contentMode = .scaleAspectFit
+        image.heightAnchor.constraint(equalTo: image.widthAnchor).isActive = true
         image.backgroundColor = .black
         return image
     }()
@@ -45,8 +73,13 @@ class PostTableViewCell: UITableViewCell {
     private let contentLikesLabel : UILabel = {
         let likes = UILabel()
         likes.translatesAutoresizingMaskIntoConstraints = false
-        likes.font = .systemFont(ofSize: 16, weight: .regular)
         likes.textColor = .black
+        likes.backgroundColor = .clear
+        likes.font = UIFont(name: "System", size: 16)
+        likes.textColor = .black
+        let tap = UITapGestureRecognizer(target: PostTableViewCell.self, action: #selector(tapLiked))
+        likes.isUserInteractionEnabled = true
+        likes.addGestureRecognizer(tap)
         return likes
     }()
     
@@ -54,6 +87,7 @@ class PostTableViewCell: UITableViewCell {
         let views = UILabel()
         views.translatesAutoresizingMaskIntoConstraints = false
         views.font = .systemFont(ofSize: 16, weight: .regular)
+        views.font = UIFont(name: "System", size: 14)
         views.textColor = .black
         return views
     }()
@@ -62,7 +96,6 @@ class PostTableViewCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        customizeCell()
         layout()
         
     }
@@ -70,60 +103,47 @@ class PostTableViewCell: UITableViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-        
-    }
-    
-    private func customizeCell() {
-        contentView.backgroundColor = .systemGray6
-    }
-    
-    func setup (_ post: Post) {
-        contentAuthorLabel.text = post.author
-        contentImageView.image = UIImage(named: post.image)
-        contentDescriptionLabel.text = post.description
-        contentLikesLabel.text = "Likes: \(String(post.likes))"
-        contentViewsLabel.text = "Views: \(String(post.views))"
-    }
-    
+
     private func layout() {
         
-        contentView.addSubview(contentProfileView)
+        contentView.backgroundColor = .white
+                contentView.addSubview(contentProfileView)
+                contentProfileView.addSubview(stackViewPost)
+                stackViewPost.addArrangedSubview(contentAuthorLabel)
+                stackViewPost.addArrangedSubview(contentImageView)
+                stackViewPost.addArrangedSubview(contentDescriptionLabel)
+                stackViewPost.addArrangedSubview(stackViewLikesViews)
+                stackViewLikesViews.addArrangedSubview(contentLikesLabel)
+                stackViewLikesViews.addArrangedSubview(contentViewsLabel)
+                stackViewPost.backgroundColor = .white
         
-        [contentAuthorLabel, contentDescriptionLabel, contentImageView, contentLikesLabel, contentViewsLabel].forEach {contentProfileView.addSubview($0)}
+                NSLayoutConstraint.activate([
+                    contentProfileView.topAnchor.constraint(equalTo: contentView.topAnchor),
+                    contentProfileView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                    contentProfileView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                    contentProfileView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
         
-        NSLayoutConstraint.activate([
-            contentProfileView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            contentProfileView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            contentProfileView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            contentProfileView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            
-            contentAuthorLabel.topAnchor.constraint(equalTo: contentProfileView.topAnchor, constant: 16),
-            contentAuthorLabel.leadingAnchor.constraint(equalTo: contentProfileView.leadingAnchor, constant: 16),
-            contentAuthorLabel.trailingAnchor.constraint(equalTo: contentProfileView.trailingAnchor, constant: -16),
-            
-            contentImageView.topAnchor.constraint(equalTo: contentAuthorLabel.bottomAnchor, constant: 12),
-            contentImageView.leadingAnchor.constraint(equalTo: contentProfileView.leadingAnchor),
-            contentImageView.trailingAnchor.constraint(equalTo: contentProfileView.trailingAnchor),
-            contentImageView.heightAnchor.constraint(equalTo: contentImageView.widthAnchor),
-            contentImageView.widthAnchor.constraint(equalTo: contentProfileView.widthAnchor),
-            
-            contentDescriptionLabel.topAnchor.constraint(equalTo: contentImageView.bottomAnchor, constant: 16),
-            contentDescriptionLabel.leadingAnchor.constraint(equalTo: contentProfileView.leadingAnchor, constant: 16),
-            contentDescriptionLabel.trailingAnchor.constraint(equalTo: contentProfileView.trailingAnchor, constant: -16),
-            
-            contentLikesLabel.topAnchor.constraint(equalTo: contentDescriptionLabel.bottomAnchor, constant: 16),
-            contentLikesLabel.leadingAnchor.constraint(equalTo: contentProfileView.leadingAnchor, constant: 16),
-            contentLikesLabel.bottomAnchor.constraint(equalTo: contentProfileView.bottomAnchor, constant: -16),
-            contentLikesLabel.widthAnchor.constraint(equalTo: contentViewsLabel.widthAnchor),
-            
-            contentViewsLabel.topAnchor.constraint(equalTo: contentDescriptionLabel.bottomAnchor, constant: 16),
-            contentViewsLabel.trailingAnchor.constraint(equalTo: contentProfileView.trailingAnchor, constant: -16),
-            contentViewsLabel.bottomAnchor.constraint(equalTo: contentProfileView.bottomAnchor, constant: -16),
-        ])
+                    stackViewPost.topAnchor.constraint(equalTo: contentProfileView.topAnchor, constant: 6),
+                    stackViewPost.leadingAnchor.constraint(equalTo: contentProfileView.leadingAnchor, constant: 16),
+                    stackViewPost.trailingAnchor.constraint(equalTo: contentProfileView.trailingAnchor, constant: -16),
+                    stackViewPost.bottomAnchor.constraint(equalTo: contentProfileView.bottomAnchor, constant: -6)
+                    ])
         
     }
+    
+    func setup(with viewModel: ViewModel) {
+            self.contentAuthorLabel.text = viewModel.author
+            self.contentImageView.image = UIImage(named: viewModel.image)
+            self.contentDescriptionLabel.text = viewModel.description
+            self.contentLikesLabel.text = "Likes: " + String(viewModel.likes)
+            self.contentViewsLabel.text = "Views: " + String(viewModel.views)
+        }
+    
+        @objc func tapLiked() {
+            likedDelegate?.tapLikedLabel()
+        }
 
 }
+    
+    
+ 

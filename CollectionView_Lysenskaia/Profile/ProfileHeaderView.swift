@@ -9,13 +9,15 @@ import UIKit
 
 class ProfileHeaderView: UIView {
 
-    private lazy var profileImageView : UIImageView = {
+    lazy var profileImageView : UIImageView = {
         let profileImageView = UIImageView()
         profileImageView.image = UIImage(named: "2-1.jpeg")
-        profileImageView.layer.cornerRadius = 50
+        profileImageView.clipsToBounds = true
+        profileImageView.layer.cornerRadius = 70
         profileImageView.layer.borderWidth = 3
         profileImageView.layer.borderColor = UIColor.white.cgColor
         profileImageView.layer.masksToBounds = true
+        profileImageView.isUserInteractionEnabled = true
         return profileImageView
     }()
     
@@ -33,6 +35,7 @@ class ProfileHeaderView: UIView {
         statusLabel.text = "Waiting for something..."
         statusLabel.font = .systemFont(ofSize: 14, weight: .regular)
         statusLabel.textColor = .gray
+        statusLabel.numberOfLines = 2
         return statusLabel
     }()
     
@@ -40,13 +43,15 @@ class ProfileHeaderView: UIView {
         let statusTextField = UITextField()
         statusTextField.backgroundColor = .white
         statusTextField.placeholder = "Введите новый статус"
-        statusTextField.textAlignment = NSTextAlignment.center
-        statusTextField.font = .systemFont(ofSize: 15, weight: .regular)
-        statusTextField.textColor = .gray
-        statusTextField.addTarget(self, action: #selector(ProfileHeaderView.statusLabelChanged(_:)), for: .editingChanged)
-        statusTextField.layer.cornerRadius = 12
-        statusTextField.layer.borderWidth = 1
-        statusTextField.layer.borderColor = UIColor.black.cgColor
+        statusTextField.returnKeyType = .done
+        statusTextField.autocapitalizationType = .words
+        statusTextField.font = .systemFont(ofSize: 15)
+        statusTextField.textColor = .systemGray2
+        statusTextField.backgroundColor = .systemGray4
+        statusTextField.borderStyle = .roundedRect
+        statusTextField.returnKeyType = .next
+        statusTextField.keyboardType = .default
+        statusTextField.clearButtonMode = .always
         return statusTextField
     }()
     
@@ -64,11 +69,11 @@ class ProfileHeaderView: UIView {
         
         return statusButton
     }()
-    
-    private var statusText : String = ""
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapKeyboardOff(_:)))
+        self.addGestureRecognizer(tap)
         
         addSubview(profileImageView)
         profileImageView.translatesAutoresizingMaskIntoConstraints = false
@@ -88,8 +93,8 @@ class ProfileHeaderView: UIView {
         NSLayoutConstraint.activate([
             profileImageView.topAnchor.constraint(equalTo: topAnchor, constant: 16),
             profileImageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            profileImageView.widthAnchor.constraint(equalToConstant: 100),
-            profileImageView.heightAnchor.constraint(equalToConstant: 100),
+            profileImageView.widthAnchor.constraint(equalToConstant: 140),
+            profileImageView.heightAnchor.constraint(equalToConstant: 140),
             
             userNameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 16),
             userNameLabel.topAnchor.constraint(equalTo: topAnchor, constant: 27),
@@ -116,16 +121,35 @@ class ProfileHeaderView: UIView {
     }
     
     
-    @objc private func buttonPressed() {
-            statusLabel.text = statusText
-            print (statusLabel.text ?? "nil")
-        }
-    
-    @objc private func statusLabelChanged (_ textField: UITextField) {
-            if let text = textField.text {
-            statusText = text
-        }
+    @objc func tapKeyboardOff(_ sender: Any) {
+        statusTextField.resignFirstResponder()
     }
-    
+
+    @objc private func buttonPressed() {
+        guard let status = statusTextField.text else {return}
+        if !status.isEmpty {
+            UIView.animate(withDuration: 0.5) {
+                self.statusLabel.text = self.statusTextField.text
+                self.statusTextField.text = .none
+            } completion: { _ in
+            }
+        }
+        if status.isEmpty {
+            statusTextField.shake()
+        }
+        endEditing(true)
+    }
+
 }
 
+extension UITextField {
+    func shake() {
+        let animation = CABasicAnimation(keyPath: "position")
+        animation.duration = 0.05
+        animation.repeatCount = 5
+        animation.autoreverses = true
+        animation.fromValue = CGPoint(x: self.center.x - 4.0, y: self.center.y)
+        animation.toValue = CGPoint(x: self.center.x + 4.0, y: self.center.y)
+        layer.add(animation, forKey: "position")
+    }
+}

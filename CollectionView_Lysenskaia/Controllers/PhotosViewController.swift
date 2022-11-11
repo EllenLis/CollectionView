@@ -8,6 +8,9 @@
 import UIKit
 
 class PhotosViewController: UIViewController {
+    
+    var selectedCell: PhotosCollectionViewCell?
+    var selectedCellImageViewSnapshot: UIView?
 
     private enum Constants {
         static let itemCount: CGFloat = 3
@@ -31,7 +34,7 @@ class PhotosViewController: UIViewController {
         return collectionView
     }()
 
-    private var collectionDataSource : [PhotoModel] = [
+    var collectionDataSource : [PhotoModel] = [
         PhotoModel(image: "1"),
         PhotoModel(image: "2"),
         PhotoModel(image: "3"),
@@ -110,6 +113,12 @@ extension PhotosViewController: UICollectionViewDataSource, UICollectionViewDele
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt: IndexPath) -> CGSize {
         let spacing = ( collectionView.collectionViewLayout as? UICollectionViewFlowLayout)?.minimumInteritemSpacing
         return self.itemSize(for: collectionView.frame.width, with: spacing ?? 0)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let viewController = DetailedPhotoViewController()
+        viewController.selectedImage = collectionDataSource[indexPath.row].image
+        navigationController?.pushViewController(viewController, animated: true)
     }
     
 }
