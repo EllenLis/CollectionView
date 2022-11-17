@@ -8,5 +8,5 @@
 import Foundation
 
 protocol TapLikedDelegate: AnyObject {
-    func tapLikedLabel()
+    func tapLikedLabel(cell: PostTableViewCell)
 }

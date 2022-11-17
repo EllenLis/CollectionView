@@ -10,7 +10,7 @@ import UIKit
 class PostTableViewCell: UITableViewCell {
     
     var likedDelegate: TapLikedDelegate?
-
+    
     struct ViewModel {
         let author: String
         let image: String
@@ -18,6 +18,8 @@ class PostTableViewCell: UITableViewCell {
         var likes: Int
         var views: Int
     }
+    
+    private let tapLike = UITapGestureRecognizer()
     
     private let contentProfileView : UIView = {
         let view = UIView()
@@ -70,23 +72,18 @@ class PostTableViewCell: UITableViewCell {
     }()
     
     
-    private let contentLikesLabel : UILabel = {
+    lazy var contentLikesLabel : UILabel = {
         let likes = UILabel()
         likes.translatesAutoresizingMaskIntoConstraints = false
         likes.textColor = .black
         likes.backgroundColor = .clear
         likes.font = UIFont(name: "System", size: 16)
-        likes.textColor = .black
-        let tap = UITapGestureRecognizer(target: PostTableViewCell.self, action: #selector(tapLiked))
-        likes.isUserInteractionEnabled = true
-        likes.addGestureRecognizer(tap)
         return likes
     }()
     
-    private let contentViewsLabel : UILabel = {
+    private var contentViewsLabel : UILabel = {
         let views = UILabel()
         views.translatesAutoresizingMaskIntoConstraints = false
-        views.font = .systemFont(ofSize: 16, weight: .regular)
         views.font = UIFont(name: "System", size: 14)
         views.textColor = .black
         return views
@@ -97,11 +94,20 @@ class PostTableViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         layout()
-        
+        self.setupGestureLikeLabel()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.contentAuthorLabel.text = nil
+        self.contentImageView.image = nil
+        self.contentDescriptionLabel.text = nil
+        self.contentLikesLabel.text = nil
+        self.contentViewsLabel.text = nil
     }
 
     private func layout() {
@@ -139,9 +145,21 @@ class PostTableViewCell: UITableViewCell {
             self.contentViewsLabel.text = "Views: " + String(viewModel.views)
         }
     
-        @objc func tapLiked() {
-            likedDelegate?.tapLikedLabel()
-        }
+    private func setupGestureLikeLabel() {
+
+        self.contentLikesLabel.addGestureRecognizer(tapLike)
+        self.tapLike.addTarget(self, action: #selector(self.tapLiked(_:)))
+        self.tapLike.view?.isUserInteractionEnabled = true
+        
+    }
+    
+    @objc func tapLiked(_ gestureRecognizer: UITapGestureRecognizer) {
+        
+        guard let newCount = Int((self.contentLikesLabel.text!.dropFirst(7))) else {return}
+        self.contentLikesLabel.text = "Likes: \(newCount + 1)"
+        likedDelegate?.tapLikedLabel(cell: self)
+        
+    }
 
 }
     

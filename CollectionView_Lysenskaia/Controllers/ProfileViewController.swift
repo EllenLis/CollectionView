@@ -112,6 +112,14 @@ class ProfileViewController: UIViewController, TapLikedDelegate {
         present(secondViewController, animated: true)
     }
     
+    func tapLikedLabel(cell: PostTableViewCell) {
+        guard let index = profileTableView.indexPath(for: cell)?.row else { return }
+        dataSource[index - 1].likes += 1
+        let reloadRow = IndexPath(row: index, section: 1)
+        profileTableView.reloadRows(at: [reloadRow], with: .none)
+    }
+    
+    
 }
 
 extension ProfileViewController : UITableViewDataSource, UITableViewDelegate {
